@@ -1,0 +1,30 @@
+Uses "IniFile", "Console"
+
+' -- Hook it to any file you need
+Dim config As IniFile
+config = New IniFile(APP_SourcePath + "settings.ini")
+
+' -- Write data this way - first is section, then key
+config.SetKey("Screen", "Width", "1920")
+config.SetKey("Screen", "Height", "1080")
+
+config.SetKey("User", "Name", "DarthVader")
+config.SetKey("User", "Password", "Force")
+
+
+' -- Read the data back, even with default values
+PrintL config.GetKey("Screen", "Width") + "x" + config.GetKey("Screen", "Height") + "@" + config.GetKey("Screen", "BitDepth", "32")
+PrintL
+
+' -- List sections
+PrintL "Sections:", config.GetSections(",")
+PrintL
+
+' -- List keys
+PrintL "Keys for Screen:", config.GetKeys("Screen", ",")
+PrintL
+
+PrintL "Keys for User:", config.GetKeys("User", ",")
+PrintL
+
+WaitKey

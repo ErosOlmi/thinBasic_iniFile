@@ -1,0 +1,142 @@
+Uses "IniFile"
+Uses "Console", "File"      
+
+#INCLUDE "unitTesting.tBasicU"
+
+$FILE_INI = APP_SourcePath + "test.ini"
+
+Function TBMain()
+  
+  Print "Testing thinBasic_IniFile feature set..."
+  ut_Initialize()
+
+  ut_LaunchTests("")
+  
+  ut_Release()
+  
+  If ut_FailCount Then               
+    ut_SaveLog()           
+    PrintL
+    PrintL
+    PrintL "See the following file for all the details:" In 15
+    PrintL ut_logFileName In 14
+    PrintL                     
+    PrintL "Brief overview of " + ut_FailCount + " failures:" In 11
+    PrintUnitTestIssues(ut_logFileName)    
+    
+  Else
+    PrintL "PASSED" In 10  
+  End If  
+  
+  WaitKey
+
+End Function
+
+Function PrintUnitTestIssues(sourceFile As String)
+
+  String content = FILE_Load(ut_logFileName)
+  String unitTest, failure
+  
+  Long   issueCount = Grab$(content, "<failCount>", "</failCount>")  
+    
+  Long i
+  For i = 1 To issueCount
+    unitTest = Grab$(content, "<testName>", "</testName>", i)
+    failure  = Grab$(content, "<description>", "</description>", i)
+  
+    PrintL unitTest In 15
+    PrintL failure In 12
+    PrintL
+    
+  Next          
+
+End Function          
+
+' -----------------------------------------------------------------------------
+
+Function test_Teardown()
+  FILE_Kill($FILE_INI)
+End Function
+
+' -----------------------------------------------------------------------------
+
+Function test_Constructor_ValuePassed_FileNameUsed()
+
+  Dim ini As IniFile
+  ini = New IniFile($FILE_INI)
+  
+  ini.SetKey("Section", "Key", "Value")
+  
+  ut_assertIsTrue(FILE_Exists($FILE_INI))
+  
+End Function
+
+' -----------------------------------------------------------------------------
+
+Function test_SetKey_SectionAndKeyWritten_ValueStored()
+
+  Dim ini As IniFile
+  ini = New IniFile($FILE_INI)
+  
+  ini.SetKey("Section", "Key", "Value")
+  
+  String content = FILE_Load($FILE_INI)
+  ut_assertIsGreater(InStr(content, "[Section]"), 0)
+  ut_assertIsGreater(InStr(content, "Key=Value"), 0)
+  
+End Function
+
+Function test_SetKey_SectionAndKeyWritten_DataCanBeRead()
+
+  Dim ini As IniFile
+  ini = New IniFile($FILE_INI)
+  
+  ini.SetKey("Section", "Key", "Value")
+  
+  ut_assertEqualText("Value", ini.GetKey("Section", "Key"))  
+  
+End Function
+
+Function test_SetKey_SectionAndKeyWritten_ReturnsValue()
+
+  Dim ini As IniFile
+  ini = New IniFile($FILE_INI)
+  
+  String result = ini.SetKey("Section", "Key", "Value")
+  
+  ut_assertEqualText("Value", result)  
+  
+End Function
+
+Function test_GetKey_NoDataWrittenButReadWithDefaults_GotDefault()
+
+  Dim ini As IniFile
+  ini = New IniFile($FILE_INI)
+  
+  ut_assertEqualText("Default", ini.GetKey("Section", "Key", "Default"))  
+  
+End Function
+
+Function test_GetSections_TwoWritten_TwoGot()
+
+  Dim ini As IniFile
+  ini = New IniFile($FILE_INI)   
+  
+  ini.SetKey("SectionA", "KeyA", "ValueA")
+  ini.SetKey("SectionB", "KeyB", "ValueB")
+  
+  ut_assertEqualText("SectionA,SectionB", ini.GetSections(","))  
+  
+End Function  
+
+Function test_GetKeys_TwoWritten_TwoGot()
+
+  Dim ini As IniFile
+  ini = New IniFile($FILE_INI)   
+  
+  ini.SetKey("Section", "KeyA", "ValueA")
+  ini.SetKey("Section", "KeyB", "ValueB")
+  
+  ut_assertEqualText("KeyA,KeyB", ini.GetKeys("Section", ","))  
+  
+End Function
